@@ -45,6 +45,7 @@ export function createQueueSupabaseMock(queue: MockResult[]) {
       is: vi.fn(() => builder),
       update: vi.fn(() => builder),
       insert: vi.fn(() => builder),
+      delete: vi.fn(() => builder),
       upsert: vi.fn(() => builder),
       order: vi.fn(() => builder),
       limit: vi.fn(() => builder),

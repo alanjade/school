@@ -4,6 +4,7 @@ import { DeleteEntryButton } from "@/components/DeleteEntryButton";
 import { CopyTimetableButton } from "@/components/CopyTimetableButton";
 import { PrintButton } from "@/components/PrintButton";
 import Link from "next/link";
+import { buildGridRows, hhmm } from "@/lib/bellSchedule";
 
 const WEEKDAY_NAMES = ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const TERMS = [1, 2, 3];
@@ -67,6 +68,11 @@ export default async function ClassTimetablePage({
     .select("id, name, education_level")
     .order("name");
 
+  const { data: bellPeriods } = await supabase
+    .from("bell_periods")
+    .select("*")
+    .order("start_time", { ascending: true });
+
   const { data: teacherProfiles } = await supabase
     .from("teacher_profiles")
     .select("id, profiles(full_name)");
@@ -83,9 +89,16 @@ export default async function ClassTimetablePage({
   const entryBySlot = new Map(
     (entries ?? []).map((entry) => [`${entry.period_number}-${entry.weekday}`, entry])
   );
-  const periodNumbers = [...new Set((entries ?? []).map((entry) => entry.period_number))].sort(
-    (a, b) => a - b
-  );
+  const gridRows = buildGridRows(bellPeriods ?? [], entries ?? []);
+  const hasBellSchedule = (bellPeriods ?? []).length > 0;
+  const formBellPeriods = (bellPeriods ?? [])
+    .filter((p) => !p.is_break && p.period_number !== null)
+    .map((p) => ({
+      periodNumber: p.period_number as number,
+      label: p.label,
+      startTime: hhmm(p.start_time),
+      endTime: hhmm(p.end_time),
+    }));
 
   return (
     <div>
@@ -137,6 +150,7 @@ export default async function ClassTimetablePage({
           term={term}
           subjects={subjects ?? []}
           teachers={teachers}
+          bellPeriods={formBellPeriods}
         />
       </div>
 
@@ -188,38 +202,74 @@ export default async function ClassTimetablePage({
             </tr>
           </thead>
           <tbody>
-            {periodNumbers.map((periodNumber) => (
-              <tr key={periodNumber} className="border-b border-rule last:border-0">
-                <th className="whitespace-nowrap bg-paper/50 px-3 py-3 text-left align-top text-xs font-medium text-ink-soft">
-                  P{periodNumber}
-                </th>
-                {[1, 2, 3, 4, 5].map((day) => {
-                  const entry = entryBySlot.get(`${periodNumber}-${day}`);
-                  return (
-                    <td key={day} className="border-l border-rule p-2 align-top">
-                      {entry ? (
-                        <div className="rounded-lg bg-leaf-soft/40 p-2">
-                          <p className="font-medium text-ink">{entry.subjects?.name}</p>
-                          <p className="text-xs text-ink-soft">
-                            {entry.teacher_profiles?.profiles?.full_name}
-                          </p>
-                          <p className="mt-1 text-xs text-ink-soft">
-                            {entry.start_time}–{entry.end_time}
-                            {entry.room ? ` · ${entry.room}` : ""}
-                          </p>
-                          <div className="mt-2 print:hidden">
-                            <DeleteEntryButton entryId={entry.id} />
+            {gridRows.map((row) =>
+              row.kind === "break" ? (
+                <tr key={row.key} className="border-b border-rule last:border-0">
+                  <td
+                    colSpan={6}
+                    className="bg-paper/60 px-3 py-2 text-center text-xs text-ink-soft"
+                  >
+                    {row.label} · {row.startTime}–{row.endTime}
+                  </td>
+                </tr>
+              ) : (
+                <tr key={row.key} className="border-b border-rule last:border-0">
+                  <th className="whitespace-nowrap bg-paper/50 px-3 py-3 text-left align-top text-xs font-medium text-ink-soft">
+                    <div>P{row.periodNumber}</div>
+                    {row.inBellSchedule && (
+                      <div className="mt-0.5 font-normal">
+                        {row.startTime}–{row.endTime}
+                      </div>
+                    )}
+                    {row.inBellSchedule && row.label !== `Period ${row.periodNumber}` && (
+                      <div className="font-normal">{row.label}</div>
+                    )}
+                    {hasBellSchedule && !row.inBellSchedule && (
+                      <div className="mt-0.5 font-normal text-clay">Not in bell schedule</div>
+                    )}
+                  </th>
+                  {[1, 2, 3, 4, 5].map((day) => {
+                    const entry = entryBySlot.get(`${row.periodNumber}-${day}`);
+                    // On a bell-schedule row the time is already in the row
+                    // header, so only repeat it on a lesson that disagrees.
+                    const timesDiffer =
+                      !!entry &&
+                      (hhmm(entry.start_time) !== row.startTime ||
+                        hhmm(entry.end_time) !== row.endTime);
+                    const showTimes = !!entry && (!row.inBellSchedule || timesDiffer);
+                    return (
+                      <td key={day} className="border-l border-rule p-2 align-top">
+                        {entry ? (
+                          <div className="rounded-lg bg-leaf-soft/40 p-2">
+                            <p className="font-medium text-ink">{entry.subjects?.name}</p>
+                            <p className="text-xs text-ink-soft">
+                              {entry.teacher_profiles?.profiles?.full_name}
+                            </p>
+                            {(showTimes || entry.room) && (
+                              <p
+                                className={`mt-1 text-xs ${
+                                  row.inBellSchedule && timesDiffer ? "text-clay" : "text-ink-soft"
+                                }`}
+                              >
+                                {showTimes && `${hhmm(entry.start_time)}–${hhmm(entry.end_time)}`}
+                                {showTimes && entry.room ? " · " : ""}
+                                {entry.room ?? ""}
+                              </p>
+                            )}
+                            <div className="mt-2 print:hidden">
+                              <DeleteEntryButton entryId={entry.id} />
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-ink-soft">—</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-            {!periodNumbers.length && (
+                        ) : (
+                          <span className="text-xs text-ink-soft">—</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              )
+            )}
+            {!gridRows.length && (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm text-ink-soft">
                   No periods have been added for this term.

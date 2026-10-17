@@ -19,12 +19,20 @@ export default async function AdminTimetablesPage() {
         <p className="text-sm text-ink-soft">
           Select a class to view or build its weekly schedule.
         </p>
-        <Link
-          href="/dashboard/admin/timetables/teachers"
-          className="rounded-lg border border-leaf px-4 py-2 text-sm font-medium text-leaf hover:bg-leaf-soft"
-        >
-          Teacher schedule view
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/dashboard/admin/bell-schedule"
+            className="rounded-lg border border-leaf px-4 py-2 text-sm font-medium text-leaf hover:bg-leaf-soft"
+          >
+            Bell schedule
+          </Link>
+          <Link
+            href="/dashboard/admin/timetables/teachers"
+            className="rounded-lg border border-leaf px-4 py-2 text-sm font-medium text-leaf hover:bg-leaf-soft"
+          >
+            Teacher schedule view
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

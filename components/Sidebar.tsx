@@ -74,6 +74,7 @@ const ADMIN_NAV_SECTIONS: { section: string; items: { label: string; href: strin
       { label: "Academic Year Rollover", href: "/dashboard/admin/rollover" },
       { label: "Subjects", href: "/dashboard/admin/subjects" },
       { label: "Timetables", href: "/dashboard/admin/timetables" },
+      { label: "Bell Schedule", href: "/dashboard/admin/bell-schedule" },
       { label: "Scheme of Work", href: "/dashboard/admin/curriculum" },
       { label: "Grade Moderation", href: "/dashboard/admin/grades" },
       { label: "Lesson Plan Review", href: "/dashboard/admin/lesson-plans" },

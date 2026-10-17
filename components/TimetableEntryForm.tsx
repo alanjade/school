@@ -20,20 +20,31 @@ export function TimetableEntryForm({
   term,
   subjects,
   teachers,
+  bellPeriods = [],
 }: {
   classId: string;
   academicYear: string;
   term: number;
   subjects: { id: string; name: string; education_level?: string | null }[];
   teachers: { id: string; full_name: string }[];
+  /**
+   * Lesson periods from the school bell schedule ("HH:MM" times). When
+   * present the period is picked from this list and its times come from
+   * the bell schedule; when empty the admin types the times as before.
+   */
+  bellPeriods?: { periodNumber: number; label: string; startTime: string; endTime: string }[];
 }) {
   const router = useRouter();
   const supabase = createClient();
 
   const [weekday, setWeekday] = useState(1);
-  const [periodNumber, setPeriodNumber] = useState(1);
-  const [startTime, setStartTime] = useState("08:00");
-  const [endTime, setEndTime] = useState("08:40");
+  const [periodNumber, setPeriodNumber] = useState(bellPeriods[0]?.periodNumber ?? 1);
+  const [manualStart, setManualStart] = useState("08:00");
+  const [manualEnd, setManualEnd] = useState("08:40");
+  const selectedBell = bellPeriods.find((p) => p.periodNumber === periodNumber);
+  const usingBellSchedule = bellPeriods.length > 0;
+  const startTime = selectedBell?.startTime ?? manualStart;
+  const endTime = selectedBell?.endTime ?? manualEnd;
   const [subjectId, setSubjectId] = useState(subjects[0]?.id ?? "");
   const [teacherId, setTeacherId] = useState(teachers[0]?.id ?? "");
   const [room, setRoom] = useState("");
@@ -178,31 +189,47 @@ export function TimetableEntryForm({
         ))}
       </select>
 
-      <input
-        type="number"
-        min={1}
-        max={10}
-        placeholder="Period #"
-        value={periodNumber}
-        onChange={(e) => setPeriodNumber(Number(e.target.value))}
-        className="rounded-lg border border-rule px-3 py-2 text-sm"
-      />
+      {usingBellSchedule ? (
+        <select
+          value={periodNumber}
+          onChange={(e) => setPeriodNumber(Number(e.target.value))}
+          className="col-span-2 rounded-lg border border-rule px-3 py-2 text-sm sm:col-span-3"
+        >
+          {bellPeriods.map((p) => (
+            <option key={p.periodNumber} value={p.periodNumber}>
+              P{p.periodNumber} · {p.label} ({p.startTime}–{p.endTime})
+            </option>
+          ))}
+        </select>
+      ) : (
+        <>
+          <input
+            type="number"
+            min={1}
+            max={10}
+            placeholder="Period #"
+            value={periodNumber}
+            onChange={(e) => setPeriodNumber(Number(e.target.value))}
+            className="rounded-lg border border-rule px-3 py-2 text-sm"
+          />
 
-      <input
-        type="time"
-        value={startTime}
-        onChange={(e) => setStartTime(e.target.value)}
-        className="rounded-lg border border-rule px-3 py-2 text-sm"
-      />
-      <div className="col-span-1">
-        <input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-          className="w-full rounded-lg border border-rule px-3 py-2 text-sm"
-        />
-        {fieldErrors.endTime && <p className="mt-1 text-xs text-clay">{fieldErrors.endTime}</p>}
-      </div>
+          <input
+            type="time"
+            value={manualStart}
+            onChange={(e) => setManualStart(e.target.value)}
+            className="rounded-lg border border-rule px-3 py-2 text-sm"
+          />
+          <div className="col-span-1">
+            <input
+              type="time"
+              value={manualEnd}
+              onChange={(e) => setManualEnd(e.target.value)}
+              className="w-full rounded-lg border border-rule px-3 py-2 text-sm"
+            />
+            {fieldErrors.endTime && <p className="mt-1 text-xs text-clay">{fieldErrors.endTime}</p>}
+          </div>
+        </>
+      )}
 
       <select
         value={subjectId}

@@ -205,6 +205,18 @@ export type TimetableEntry = {
   term: number;
 };
 
+export type BellPeriod = {
+  id: string;
+  /** null for breaks; the same number timetable_entries.period_number uses for lessons. */
+  period_number: number | null;
+  label: string;
+  is_break: boolean;
+  /** "HH:MM:SS" wall-clock time (plain `time` column, no date or timezone). */
+  start_time: string;
+  end_time: string;
+  created_at: string;
+};
+
 export type Lesson = {
   id: string;
   timetable_entry_id: string | null;
@@ -1230,6 +1242,12 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      bell_periods: {
+        Row: BellPeriod;
+        Insert: Partial<BellPeriod>;
+        Update: Partial<BellPeriod>;
+        Relationships: [];
       };
       messages: {
         Row: Message;
