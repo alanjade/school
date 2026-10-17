@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient, getCurrentProfile } from "@/lib/supabase/server";
 import { getMessagePartner } from "@/lib/actions/messages";
 import { MessageComposer } from "@/components/MessageComposer";
-import { RealtimeMessageThread } from "@/components/RealtimeMessageThread";
+import { MessageThread } from "@/components/MessageThread";
 import { ArchiveConversationButton } from "@/components/ArchiveConversationButton";
 import { DeleteConversationButton } from "@/components/DeleteConversationButton";
 import { redirect } from "next/navigation";
@@ -56,7 +56,7 @@ export default async function MessageThreadPage({
         </div>
       </div>
 
-      <RealtimeMessageThread
+      <MessageThread
         currentUserId={profile.id}
         partnerId={resolvedParams.userId}
         initialMessages={messages ?? []}

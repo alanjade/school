@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { writeAuditLog } from "@/lib/audit";
 import { throwDbError } from "@/lib/errors/db";
 import { runAction } from "@/lib/actionResult";
+import type { InboxData, InboxView, ThreadMessage } from "@/lib/messagePolling";
 
 /**
  * Returns just the display name/role for a message-thread partner.
@@ -116,7 +117,7 @@ export async function markThreadRead(partnerId: string) {
 }
 
 /**
- * Backs the live sidebar badge (LiveMessagesBadge) rather than
+ * Backs the polling sidebar badge (LiveMessagesBadge) rather than
  * get_notification_counts(): that RPC only runs once per dashboard
  * *layout* mount, and Next.js doesn't re-run a layout's server data on
  * a soft client-side navigation between routes under it -- so the
@@ -138,6 +139,119 @@ export async function getUnreadMessagesCount(): Promise<number> {
     .eq("read", false);
 
   return count ?? 0;
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Upper bound on rows returned by one thread poll; the cursor catches up on the next tick. */
+const THREAD_POLL_LIMIT = 200;
+
+/**
+ * Polling read for an open conversation: every message between the caller
+ * and partnerId with sent_at >= `after` (or the whole thread when `after`
+ * is null, i.e. the thread was empty on load), oldest first. Includes the
+ * caller's own messages so a second tab/device stays in sync.
+ *
+ * `>=` rather than `>` is deliberate: two messages can share a timestamp,
+ * and a strict compare could skip the second one forever. The client
+ * dedupes by id, so re-receiving the cursor row is harmless.
+ *
+ * Returns null (rather than throwing) on bad input, no session, or a DB
+ * error -- a poll failing should be silent and simply retried. partnerId
+ * is validated as a UUID because it is interpolated into a PostgREST
+ * `.or()` filter string and arrives straight from the browser.
+ */
+export async function getThreadMessagesSince(
+  partnerId: string,
+  after: string | null
+): Promise<ThreadMessage[] | null> {
+  if (!UUID_RE.test(partnerId)) return null;
+  if (after !== null && Number.isNaN(Date.parse(after))) return null;
+
+  const profile = await getCurrentProfile();
+  if (!profile) return null;
+
+  const supabase = createClient();
+
+  let query = supabase
+    .from("messages")
+    .select("id, sender_id, content, sent_at")
+    .or(
+      `and(sender_id.eq.${profile.id},recipient_id.eq.${partnerId}),and(sender_id.eq.${partnerId},recipient_id.eq.${profile.id})`
+    )
+    .order("sent_at", { ascending: true })
+    .limit(THREAD_POLL_LIMIT);
+
+  if (after !== null) query = query.gte("sent_at", after);
+
+  const { data, error } = await query;
+  if (error) return null;
+  return (data ?? []) as ThreadMessage[];
+}
+
+/**
+ * Builds the inbox list (one row per conversation partner, newest first,
+ * filtered to the Active or Archived tab). Shared by the inbox page's
+ * server render and by MessageInbox's polling so the two can never drift.
+ *
+ * Partner names go through the admin-backed getMessagePartners because
+ * profiles RLS hides teacher/admin rows from students and parents.
+ */
+export async function getInboxConversations(view: InboxView): Promise<InboxData | null> {
+  const profile = await getCurrentProfile();
+  if (!profile) return null;
+
+  const supabase = createClient();
+
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("id, sender_id, recipient_id, content, read, sent_at")
+    .or(`sender_id.eq.${profile.id},recipient_id.eq.${profile.id}`)
+    .order("sent_at", { ascending: false });
+
+  const { data: archives } = await supabase
+    .from("conversation_archives")
+    .select("partner_id")
+    .eq("user_id", profile.id);
+
+  const archivedPartnerIds = new Set((archives ?? []).map((a) => a.partner_id));
+
+  // Group into one row per conversation partner, keeping the most
+  // recent message and counting unread messages FROM that partner.
+  const grouped = new Map<string, { lastMessage: string; lastSentAt: string; unread: number }>();
+
+  for (const m of messages ?? []) {
+    const partnerId = m.sender_id === profile.id ? m.recipient_id : m.sender_id;
+    if (!grouped.has(partnerId)) {
+      grouped.set(partnerId, { lastMessage: m.content, lastSentAt: m.sent_at, unread: 0 });
+    }
+    if (m.recipient_id === profile.id && !m.read) {
+      grouped.get(partnerId)!.unread += 1;
+    }
+  }
+
+  const partnerIds = [...grouped.keys()];
+  const partners = await getMessagePartners(partnerIds);
+  const partnerById = new Map(partners.map((p) => [p.id, p]));
+
+  const archivedCount = partnerIds.filter((id) => archivedPartnerIds.has(id)).length;
+
+  const conversations = [...grouped.entries()]
+    .filter(([partnerId]) =>
+      view === "archived" ? archivedPartnerIds.has(partnerId) : !archivedPartnerIds.has(partnerId)
+    )
+    .sort((a, b) => new Date(b[1].lastSentAt).getTime() - new Date(a[1].lastSentAt).getTime())
+    .map(([partnerId, convo]) => ({
+      partnerId,
+      partnerName: partnerById.get(partnerId)?.full_name ?? "Unknown",
+      partnerRole: partnerById.get(partnerId)?.role ?? "",
+      lastMessage: convo.lastMessage,
+      lastSentAt: convo.lastSentAt,
+      unread: convo.unread,
+      isArchived: archivedPartnerIds.has(partnerId),
+    }));
+
+  return { conversations, archivedCount };
 }
 
 /**

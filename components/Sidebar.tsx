@@ -418,7 +418,7 @@ export function Sidebar({
                             >
                               {item.label}
                               {item.label === "Messages" ? (
-                                <LiveMessagesBadge userId={userId} initialCount={counts.messages} />
+                                <LiveMessagesBadge initialCount={counts.messages} />
                               ) : (
                                 <NotificationBadge count={countFor(item.label, counts)} />
                               )}
@@ -448,7 +448,7 @@ export function Sidebar({
                     >
                       {item.label}
                       {item.label === "Messages" ? (
-                        <LiveMessagesBadge userId={userId} initialCount={counts.messages} />
+                        <LiveMessagesBadge initialCount={counts.messages} />
                       ) : (
                         <NotificationBadge count={countFor(item.label, counts)} />
                       )}

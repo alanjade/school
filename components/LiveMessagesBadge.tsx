@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { getUnreadMessagesCount } from "@/lib/actions/messages";
+import { usePolling } from "@/lib/hooks/usePolling";
+import { MESSAGE_POLL_MS } from "@/lib/messagePolling";
 
 /**
  * The sidebar's other badges (announcements, homework) come from
@@ -11,47 +12,19 @@ import { getUnreadMessagesCount } from "@/lib/actions/messages";
  * layout's server data fetch on a soft client-side navigation between
  * routes under it, so a message that arrives (or gets read) while the
  * user is already inside /dashboard never updates that count until a
- * hard reload. This subscribes to the same realtime channel the inbox
- * itself uses and re-fetches the true count on any change, so the nav
- * badge stays in sync with what the inbox list is already showing.
+ * hard reload. This polls the true unread count so the nav badge stays
+ * in sync with what the inbox list is showing.
  */
-export function LiveMessagesBadge({
-  userId,
-  initialCount,
-}: {
-  userId: string;
-  initialCount: number;
-}) {
+export function LiveMessagesBadge({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
 
   useEffect(() => {
     setCount(initialCount);
   }, [initialCount]);
 
-  useEffect(() => {
-    const supabase = createClient();
-
-    const channel = supabase
-      .channel(`nav-messages:${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "messages",
-          filter: `recipient_id=eq.${userId}`,
-        },
-        async () => {
-          const fresh = await getUnreadMessagesCount();
-          setCount(fresh);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
+  usePolling(async () => {
+    setCount(await getUnreadMessagesCount());
+  }, MESSAGE_POLL_MS.badge);
 
   if (!count) return null;
   return (

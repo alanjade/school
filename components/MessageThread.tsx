@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { markThreadRead } from "@/lib/actions/messages";
+import { getThreadMessagesSince, markThreadRead } from "@/lib/actions/messages";
+import { usePolling } from "@/lib/hooks/usePolling";
+import { MESSAGE_POLL_MS, type ThreadMessage as Message } from "@/lib/messagePolling";
 
-type Message = {
-  id: string;
-  sender_id: string;
-  content: string;
-  sent_at: string;
-};
+function latestSentAt(messages: Message[]): string | null {
+  let latest: string | null = null;
+  for (const m of messages) {
+    if (latest === null || new Date(m.sent_at).getTime() > new Date(latest).getTime()) {
+      latest = m.sent_at;
+    }
+  }
+  return latest;
+}
 
-export function RealtimeMessageThread({
+export function MessageThread({
   currentUserId,
   partnerId,
   initialMessages,
@@ -23,13 +27,17 @@ export function RealtimeMessageThread({
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
   const seenIds = useRef(new Set(initialMessages.map((m) => m.id)));
+  // Polling cursor: only ask the server for messages at/after the newest
+  // one we already have.
+  const cursor = useRef<string | null>(latestSentAt(initialMessages));
 
   // Keep in sync if the server component re-renders with a fresh initial
-  // list (e.g. after a full navigation), without duplicating anything
-  // the realtime subscription already appended in the meantime.
+  // list (e.g. after sending a message or markThreadRead's revalidatePath),
+  // without duplicating anything polling appended in the meantime.
   useEffect(() => {
     setMessages(initialMessages);
     seenIds.current = new Set(initialMessages.map((m) => m.id));
+    cursor.current = latestSentAt(initialMessages);
   }, [initialMessages]);
 
   // Mark any messages from this partner already unread as of page load
@@ -41,44 +49,26 @@ export function RealtimeMessageThread({
     markThreadRead(partnerId);
   }, [partnerId]);
 
-  useEffect(() => {
-    const supabase = createClient();
+  usePolling(async () => {
+    const fresh = await getThreadMessagesSince(partnerId, cursor.current);
+    if (!fresh?.length) return;
 
-    const channel = supabase
-      .channel(`messages:thread:${currentUserId}:${partnerId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `recipient_id=eq.${currentUserId}`,
-        },
-        (payload) => {
-          const row = payload.new as Message & { sender_id: string };
-          // The filter above catches every message sent *to* me, from
-          // anyone — only append it here if it's actually from the
-          // person this thread is with.
-          if (row.sender_id !== partnerId) return;
-          if (seenIds.current.has(row.id)) return;
+    // The cursor row itself comes back every poll (>= compare), and our
+    // own just-sent messages may already be here via router.refresh().
+    const unseen = fresh.filter((m) => !seenIds.current.has(m.id));
+    if (!unseen.length) return;
 
-          seenIds.current.add(row.id);
-          setMessages((prev) => [
-            ...prev,
-            { id: row.id, sender_id: row.sender_id, content: row.content, sent_at: row.sent_at },
-          ]);
+    for (const m of unseen) seenIds.current.add(m.id);
+    // Every unseen row is >= the old cursor, so its newest sent_at is the new one.
+    cursor.current = latestSentAt(unseen) ?? cursor.current;
+    setMessages((prev) => [...prev, ...unseen]);
 
-          // Mark it read immediately since the thread is open and being
-          // viewed right now.
-          markThreadRead(partnerId);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUserId, partnerId]);
+    // The thread is open and being viewed, so anything new from the
+    // partner is read immediately.
+    if (unseen.some((m) => m.sender_id === partnerId)) {
+      markThreadRead(partnerId);
+    }
+  }, MESSAGE_POLL_MS.thread);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

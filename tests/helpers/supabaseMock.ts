@@ -39,6 +39,9 @@ export function createQueueSupabaseMock(queue: MockResult[]) {
     const builder: any = {
       select: vi.fn(() => builder),
       eq: vi.fn(() => builder),
+      in: vi.fn(() => builder),
+      or: vi.fn(() => builder),
+      gte: vi.fn(() => builder),
       is: vi.fn(() => builder),
       update: vi.fn(() => builder),
       insert: vi.fn(() => builder),
