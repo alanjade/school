@@ -64,13 +64,19 @@ export default async function ParentHomeworkPage({
               <div className="flex shrink-0 items-center gap-2">
                 <span className="text-xs text-ink-soft">{l.lesson_date}</span>
                 <HomeworkStatusBadge
-                  status={homeworkDisplayStatus(l.homework_status, l.homework_submissions?.[0]?.status)}
+                  status={homeworkDisplayStatus(
+                    l.homework_status,
+                    l.homework_submissions?.[0]?.status
+                  )}
                 />
               </div>
             </div>
             {l.homework_due_at &&
               (() => {
-                if (homeworkDisplayStatus(l.homework_status, l.homework_submissions?.[0]?.status) !== "given")
+                if (
+                  homeworkDisplayStatus(l.homework_status, l.homework_submissions?.[0]?.status) !==
+                  "given"
+                )
                   return null;
                 const status = homeworkDueStatus(l);
                 if (status === "none") return null;

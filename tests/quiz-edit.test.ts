@@ -46,7 +46,8 @@ const quizRow = (published: boolean): MockResult => ({
   error: null,
 });
 const owner = (id: string): MockResult => ({ data: { created_by: id }, error: null });
-const attempts = (n: number) => ({ data: null, error: null, count: n }) as MockResult & { count: number };
+const attempts = (n: number) =>
+  ({ data: null, error: null, count: n }) as MockResult & { count: number };
 const ok: MockResult = { data: null, error: null };
 
 afterEach(() => {
@@ -58,7 +59,14 @@ afterEach(() => {
 describe("updateQuizQuestions", () => {
   it("lets the quiz's owner replace the questions of an unpublished, unattempted quiz", async () => {
     mockAuthenticatedAs("teacher-1");
-    adminState.queue = [asTeacher, quizRow(false), owner("teacher-1"), attempts(0), ok /* rpc */, ok /* audit */];
+    adminState.queue = [
+      asTeacher,
+      quizRow(false),
+      owner("teacher-1"),
+      attempts(0),
+      ok /* rpc */,
+      ok /* audit */,
+    ];
 
     expect(await updateQuizQuestions("quiz-1", goodQuestions)).toEqual({ ok: true });
     expect(adminState.client!.rpc).toHaveBeenCalledWith(

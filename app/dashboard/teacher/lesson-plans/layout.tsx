@@ -7,11 +7,7 @@ import { createClient, getCurrentProfile } from "@/lib/supabase/server";
  * route by URL. (RLS and approveLessonPlan/rejectLessonPlan already refuse
  * non-HODs -- this just keeps them from landing on an empty page.)
  */
-export default async function LessonPlanReviewLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function LessonPlanReviewLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
 

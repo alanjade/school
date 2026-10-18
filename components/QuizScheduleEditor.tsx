@@ -71,10 +71,12 @@ export function QuizScheduleEditor({
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-0.5 text-ink-soft">
           <p>
-            <span className="font-medium text-ink">Opens:</span> {describe(opensAt, "when published")}
+            <span className="font-medium text-ink">Opens:</span>{" "}
+            {describe(opensAt, "when published")}
           </p>
           <p>
-            <span className="font-medium text-ink">Closes:</span> {describe(closesAt, "no closing time")}
+            <span className="font-medium text-ink">Closes:</span>{" "}
+            {describe(closesAt, "no closing time")}
           </p>
         </div>
         {isPublished ? (

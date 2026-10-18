@@ -46,7 +46,9 @@ describe("validateQuizQuestions", () => {
   });
 
   it("requires question text and positive points", () => {
-    expect(() => validateQuizQuestions([mcq({ questionText: "  " })])).toThrow("Question 1 needs text.");
+    expect(() => validateQuizQuestions([mcq({ questionText: "  " })])).toThrow(
+      "Question 1 needs text."
+    );
     expect(() => validateQuizQuestions([mcq(), mcq({ points: 0 })])).toThrow(
       "Question 2 needs points greater than zero."
     );
@@ -80,7 +82,9 @@ describe("validateQuizQuestions", () => {
 
   it("requires accepted answers for fill_blank and complete pairs for matching", () => {
     expect(() =>
-      validateQuizQuestions([mcq({ questionType: "fill_blank", options: [{ text: "", isCorrect: true }] })])
+      validateQuizQuestions([
+        mcq({ questionType: "fill_blank", options: [{ text: "", isCorrect: true }] }),
+      ])
     ).toThrow("Question 1 needs at least one accepted answer.");
     expect(() =>
       validateQuizQuestions([

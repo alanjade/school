@@ -18,7 +18,9 @@ describe("cleanHomeworkFields", () => {
       homework: "Read ch. 3",
       homeworkDueAt: null,
     });
-    expect(cleanHomeworkFields({ homework: "x", homeworkDueAt: "  ", lessonDate }).homeworkDueAt).toBeNull();
+    expect(
+      cleanHomeworkFields({ homework: "x", homeworkDueAt: "  ", lessonDate }).homeworkDueAt
+    ).toBeNull();
   });
 
   it("requires homework text", () => {
@@ -34,17 +36,17 @@ describe("cleanHomeworkFields", () => {
   });
 
   it("allows a due date on or after the lesson date, not before", () => {
-    expect(cleanHomeworkFields({ homework: "x", homeworkDueAt: lessonDate, lessonDate }).homeworkDueAt).toBe(
-      lessonDate
-    );
-    expect(() => cleanHomeworkFields({ homework: "x", homeworkDueAt: "2026-10-06", lessonDate })).toThrow(
-      "Homework due date can't be before the lesson date."
-    );
+    expect(
+      cleanHomeworkFields({ homework: "x", homeworkDueAt: lessonDate, lessonDate }).homeworkDueAt
+    ).toBe(lessonDate);
+    expect(() =>
+      cleanHomeworkFields({ homework: "x", homeworkDueAt: "2026-10-06", lessonDate })
+    ).toThrow("Homework due date can't be before the lesson date.");
   });
 
   it("rejects a malformed due date", () => {
-    expect(() => cleanHomeworkFields({ homework: "x", homeworkDueAt: "tomorrow", lessonDate })).toThrow(
-      "That due date isn't valid."
-    );
+    expect(() =>
+      cleanHomeworkFields({ homework: "x", homeworkDueAt: "tomorrow", lessonDate })
+    ).toThrow("That due date isn't valid.");
   });
 });

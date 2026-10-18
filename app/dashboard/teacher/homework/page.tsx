@@ -153,11 +153,7 @@ export default async function TeacherHomeworkPage() {
                 </div>
               </div>
               {l.homework_due_at && dueStatus !== "none" && (
-                <p
-                  className={`mb-1 text-xs font-medium ${
-                    urgent ? "text-clay" : "text-ink-soft"
-                  }`}
-                >
+                <p className={`mb-1 text-xs font-medium ${urgent ? "text-clay" : "text-ink-soft"}`}>
                   {dueLabel(l.homework_due_at, dueStatus, submittedCount, reviewedSubmissions)}
                 </p>
               )}

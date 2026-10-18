@@ -106,9 +106,8 @@ export function GradeReviewPanel({
               </button>
             </div>
           </div>
-          {rejecting === "all" && (
-            rejectBox(() => run(() => rejectAssessmentGrades(assessmentId, reason)))
-          )}
+          {rejecting === "all" &&
+            rejectBox(() => run(() => rejectAssessmentGrades(assessmentId, reason)))}
         </div>
       )}
 
@@ -158,9 +157,8 @@ export function GradeReviewPanel({
             {row.status === "rejected" && row.reviewNote && (
               <p className="mt-1 text-xs text-clay">Sent back: {row.reviewNote}</p>
             )}
-            {rejecting === row.gradeId && (
-              rejectBox(() => run(() => rejectSingleGrade(row.gradeId, reason)))
-            )}
+            {rejecting === row.gradeId &&
+              rejectBox(() => run(() => rejectSingleGrade(row.gradeId, reason)))}
           </div>
         ))}
       </div>

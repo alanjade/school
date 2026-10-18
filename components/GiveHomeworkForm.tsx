@@ -118,7 +118,12 @@ export function GiveHomeworkForm({
         />
       </label>
 
-      <HomeworkDueDateField id="give-homework-due" value={dueAt} onChange={setDueAt} min={lessonDate} />
+      <HomeworkDueDateField
+        id="give-homework-due"
+        value={dueAt}
+        onChange={setDueAt}
+        min={lessonDate}
+      />
 
       <p className="text-xs text-ink-soft">
         If a lesson was already logged for this class on that date, the homework is added to it.

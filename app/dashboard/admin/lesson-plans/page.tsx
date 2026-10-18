@@ -46,8 +46,8 @@ export default async function AdminLessonPlansPage({
     <div>
       <h1 className="mb-1 font-display text-2xl font-semibold text-ink">Lesson Plan Review</h1>
       <p className="mb-6 text-sm text-ink-soft">
-        Published notes stay hidden from students until an Academic Head (or you) approves them here.{" "}
-        {pending.length} awaiting review.
+        Published notes stay hidden from students until an Academic Head (or you) approves them
+        here. {pending.length} awaiting review.
       </p>
 
       {pageItems.length ? (

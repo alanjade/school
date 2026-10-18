@@ -69,7 +69,12 @@ export function EditHomeworkForm({
         rows={3}
         className="w-full rounded-lg border border-rule bg-white px-3 py-2 text-sm outline-none focus-visible:border-marigold"
       />
-      <HomeworkDueDateField id={`edit-due-${lessonId}`} value={due} onChange={setDue} min={lessonDate} />
+      <HomeworkDueDateField
+        id={`edit-due-${lessonId}`}
+        value={due}
+        onChange={setDue}
+        min={lessonDate}
+      />
       {submissionCount > 0 && (
         <p className="text-xs text-marigold-text">
           {submissionCount} student{submissionCount === 1 ? " has" : "s have"} already submitted

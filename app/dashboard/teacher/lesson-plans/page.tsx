@@ -90,8 +90,8 @@ export default async function HodLessonPlansPage({
     <div>
       <h1 className="mb-1 font-display text-2xl font-semibold text-ink">Lesson plan review</h1>
       <p className="mb-6 text-sm text-ink-soft">
-        Published notes stay hidden from students until an Academic Head approves them. {counts.pending}{" "}
-        awaiting review across all subjects.
+        Published notes stay hidden from students until an Academic Head approves them.{" "}
+        {counts.pending} awaiting review across all subjects.
       </p>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -101,9 +101,7 @@ export default async function HodLessonPlansPage({
               key={tab.key}
               href={tabHref(tab.key)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                status === tab.key
-                  ? "bg-white text-ink shadow-sm"
-                  : "text-ink-soft hover:text-ink"
+                status === tab.key ? "bg-white text-ink shadow-sm" : "text-ink-soft hover:text-ink"
               }`}
             >
               {tab.label}

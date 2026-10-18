@@ -78,10 +78,7 @@ export default async function HostelRoomPage({
 
   return (
     <div className="max-w-2xl">
-      <Link
-        href={backHref}
-        className="mb-4 inline-block text-sm text-leaf hover:underline"
-      >
+      <Link href={backHref} className="mb-4 inline-block text-sm text-leaf hover:underline">
         ← Back to hostels
       </Link>
 

@@ -4,12 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuiz, updateQuizQuestions } from "@/lib/actions/quiz";
 import { validateQuizQuestions } from "@/lib/quizValidation";
-import {
-  joinDateTime,
-  localIsoDate,
-  quizWindowError,
-  splitDateTime,
-} from "@/lib/quizWindow";
+import { joinDateTime, localIsoDate, quizWindowError, splitDateTime } from "@/lib/quizWindow";
 import { emitToast } from "@/lib/toast";
 import { QuestionText } from "@/components/QuestionText";
 import { MathInsertButton } from "@/components/MathInsertButton";
@@ -298,115 +293,116 @@ export function QuizBuilder({
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
       {editQuiz ? (
         <div className="rounded-xl border border-rule bg-white p-4 text-sm text-ink-soft">
-          Editing the questions of{" "}
-          <span className="font-medium text-ink">{editQuiz.title}</span>. Title, class and
-          schedule are unchanged — use Edit schedule on the quiz page for dates.
+          Editing the questions of <span className="font-medium text-ink">{editQuiz.title}</span>.
+          Title, class and schedule are unchanged — use Edit schedule on the quiz page for dates.
         </div>
       ) : (
-      <div className="grid grid-cols-2 gap-3 rounded-xl border border-rule bg-white p-4">
-        <input
-          required
-          placeholder="Quiz title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="col-span-2 rounded-lg border border-rule px-3 py-2 text-sm outline-none focus-visible:border-marigold"
-        />
-        <select
-          value={subjectId}
-          onChange={(e) => setSubjectId(e.target.value)}
-          className="rounded-lg border border-rule px-3 py-2 text-sm"
-        >
-          {(["primary", "jss", "sss"] as EducationLevel[])
-            .map((level) => ({
-              level,
-              items: subjects.filter((s) => s.education_level === level),
-            }))
-            .filter(({ items }) => items.length > 0)
-            .map(({ level, items }) => (
-              <optgroup key={level} label={LEVEL_LABELS[level]}>
-                {items.map((s) => {
-                  const range =
-                    s.min_level_number === s.max_level_number
-                      ? `${s.min_level_number}`
-                      : `${s.min_level_number}–${s.max_level_number}`;
-                  return (
-                    <option key={s.id} value={s.id}>
-                      {s.name} ({range})
-                    </option>
-                  );
-                })}
-              </optgroup>
+        <div className="grid grid-cols-2 gap-3 rounded-xl border border-rule bg-white p-4">
+          <input
+            required
+            placeholder="Quiz title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="col-span-2 rounded-lg border border-rule px-3 py-2 text-sm outline-none focus-visible:border-marigold"
+          />
+          <select
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+            className="rounded-lg border border-rule px-3 py-2 text-sm"
+          >
+            {(["primary", "jss", "sss"] as EducationLevel[])
+              .map((level) => ({
+                level,
+                items: subjects.filter((s) => s.education_level === level),
+              }))
+              .filter(({ items }) => items.length > 0)
+              .map(({ level, items }) => (
+                <optgroup key={level} label={LEVEL_LABELS[level]}>
+                  {items.map((s) => {
+                    const range =
+                      s.min_level_number === s.max_level_number
+                        ? `${s.min_level_number}`
+                        : `${s.min_level_number}–${s.max_level_number}`;
+                    return (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({range})
+                      </option>
+                    );
+                  })}
+                </optgroup>
+              ))}
+          </select>
+          <select
+            value={classId}
+            onChange={(e) => setClassId(e.target.value)}
+            className="rounded-lg border border-rule px-3 py-2 text-sm"
+          >
+            {classes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
             ))}
-        </select>
-        <select
-          value={classId}
-          onChange={(e) => setClassId(e.target.value)}
-          className="rounded-lg border border-rule px-3 py-2 text-sm"
-        >
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-        <label className="col-span-2 flex items-center gap-2 text-sm text-ink-soft">
-          Duration (minutes)
-          <input
-            type="number"
-            min={1}
-            value={durationMinutes}
-            onChange={(e) => setDurationMinutes(e.target.value)}
-            className="w-24 rounded-lg border border-rule px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-ink-soft">
-          Opens at (optional)
-          <div className="flex gap-2">
+          </select>
+          <label className="col-span-2 flex items-center gap-2 text-sm text-ink-soft">
+            Duration (minutes)
             <input
-              type="date"
-              min={localIsoDate()}
-              value={splitDateTime(opensAt).date}
-              onChange={(e) =>
-                setOpensAt(joinDateTime(e.target.value, splitDateTime(opensAt).time))
-              }
-              className="min-w-0 flex-1 rounded-lg border border-rule px-3 py-2 text-sm"
+              type="number"
+              min={1}
+              value={durationMinutes}
+              onChange={(e) => setDurationMinutes(e.target.value)}
+              className="w-24 rounded-lg border border-rule px-3 py-2 text-sm"
             />
-            <TimeSelect
-              value={splitDateTime(opensAt).time}
-              onChangeAction={(time) => setOpensAt(joinDateTime(splitDateTime(opensAt).date, time))}
-            />
-          </div>
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-ink-soft">
-          Closes at (optional)
-          <div className="flex gap-2">
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink-soft">
+            Opens at (optional)
+            <div className="flex gap-2">
+              <input
+                type="date"
+                min={localIsoDate()}
+                value={splitDateTime(opensAt).date}
+                onChange={(e) =>
+                  setOpensAt(joinDateTime(e.target.value, splitDateTime(opensAt).time))
+                }
+                className="min-w-0 flex-1 rounded-lg border border-rule px-3 py-2 text-sm"
+              />
+              <TimeSelect
+                value={splitDateTime(opensAt).time}
+                onChangeAction={(time) =>
+                  setOpensAt(joinDateTime(splitDateTime(opensAt).date, time))
+                }
+              />
+            </div>
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-ink-soft">
+            Closes at (optional)
+            <div className="flex gap-2">
+              <input
+                type="date"
+                min={localIsoDate()}
+                value={splitDateTime(closesAt).date}
+                onChange={(e) =>
+                  setClosesAt(joinDateTime(e.target.value, splitDateTime(closesAt).time))
+                }
+                className="min-w-0 flex-1 rounded-lg border border-rule px-3 py-2 text-sm"
+              />
+              <TimeSelect
+                value={splitDateTime(closesAt).time}
+                onChangeAction={(time) =>
+                  setClosesAt(joinDateTime(splitDateTime(closesAt).date, time))
+                }
+              />
+            </div>
+          </label>
+          <label className="col-span-2 flex items-center gap-2 text-sm text-ink-soft">
             <input
-              type="date"
-              min={localIsoDate()}
-              value={splitDateTime(closesAt).date}
-              onChange={(e) =>
-                setClosesAt(joinDateTime(e.target.value, splitDateTime(closesAt).time))
-              }
-              className="min-w-0 flex-1 rounded-lg border border-rule px-3 py-2 text-sm"
+              type="checkbox"
+              checked={shuffleQuestions}
+              onChange={(e) => setShuffleQuestions(e.target.checked)}
+              className="h-4 w-4 rounded border-rule"
             />
-            <TimeSelect
-              value={splitDateTime(closesAt).time}
-              onChangeAction={(time) =>
-                setClosesAt(joinDateTime(splitDateTime(closesAt).date, time))
-              }
-            />
-          </div>
-        </label>
-        <label className="col-span-2 flex items-center gap-2 text-sm text-ink-soft">
-          <input
-            type="checkbox"
-            checked={shuffleQuestions}
-            onChange={(e) => setShuffleQuestions(e.target.checked)}
-            className="h-4 w-4 rounded border-rule"
-          />
-          Shuffle question order for each student
-        </label>
-      </div>
+            Shuffle question order for each student
+          </label>
+        </div>
       )}
 
       <div className="space-y-4">

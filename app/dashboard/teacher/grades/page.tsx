@@ -116,7 +116,8 @@ export default async function TeacherGradesPage() {
         <section className="mt-10">
           <h2 className="font-display text-lg font-semibold text-ink">Academic Head moderation</h2>
           <p className="mb-3 text-sm text-ink-soft">
-            Review grades before students and parents can see them. Open an assessment to approve or reject scores.
+            Review grades before students and parents can see them. Open an assessment to approve or
+            reject scores.
           </p>
           <div className="space-y-2">
             {(moderationAssessments ?? []).map((assessment) => {

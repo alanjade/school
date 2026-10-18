@@ -48,8 +48,8 @@ export default async function HouseParentHostelsPage() {
     <div className="max-w-3xl">
       <h1 className="mb-1 font-display text-2xl font-semibold text-ink">Hostel</h1>
       <p className="mb-6 text-sm text-ink-soft">
-        Your boarding house, its rooms and occupancy. Open a room to assign students and log
-        leave and visitors.
+        Your boarding house, its rooms and occupancy. Open a room to assign students and log leave
+        and visitors.
       </p>
 
       <div className="space-y-4">
@@ -102,7 +102,9 @@ export default async function HouseParentHostelsPage() {
             </div>
           );
         })}
-        {!hostels?.length && <EmptyState message="You aren't assigned as house parent of a hostel yet." />}
+        {!hostels?.length && (
+          <EmptyState message="You aren't assigned as house parent of a hostel yet." />
+        )}
       </div>
     </div>
   );
