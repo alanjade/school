@@ -28,7 +28,7 @@ async function insertQuiz(input: {
   // Opt-in per-quiz: when true, get_quiz_attempt_questions serves each
   // student a different (but stable-for-that-attempt) question order
   // instead of the authored sequence_order. Defaults to off server-side
-  // too (see 2026_08_06b_quiz_shuffle_questions.sql), so omitting this
+  // too (see 20260806170100_quiz_shuffle_questions.sql), so omitting this
   // keeps existing create-quiz callers unaffected.
   shuffleQuestions?: boolean;
   questions: QuestionInput[];
@@ -68,7 +68,7 @@ async function insertQuiz(input: {
   const admin = createAdminClient();
 
   // One RPC call = one Postgres transaction (see
-  // 2026_08_05b_create_quiz_with_questions_rpc.sql) -- if question 3 of 5
+  // 20260805170100_create_quiz_with_questions_rpc.sql) -- if question 3 of 5
   // fails to insert, the whole thing rolls back instead of leaving
   // questions 1-2 (and the quiz/assessment rows) orphaned.
   const { data: quizId, error } = await admin.rpc("create_quiz_with_questions", {

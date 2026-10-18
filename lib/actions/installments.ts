@@ -56,7 +56,7 @@ export async function createOrReplaceInstallmentPlan(
     const scheduleTotalKobo = sorted.reduce((sum, i) => sum + i.amountKobo, 0);
 
     // One RPC call = one Postgres transaction (see
-    // 2026_08_07_atomic_installment_plan_replace.sql) -- delete-then-insert
+    // 20260807170000_atomic_installment_plan_replace.sql) -- delete-then-insert
     // used to be two separate Supabase calls here; if the insert failed
     // after the delete had already succeeded, the invoice was left with
     // an empty plan and no way back. The RPC re-validates the amount-sum
