@@ -698,7 +698,7 @@ export async function saveTopicNote(
  * Periodic autosave (#13 of markdown-editor-todo.md), UPSERTing onto a
  * single scratch row per (topic, author) rather than creating another
  * `topic_notes` version -- see the migration comment in
- * 2026_08_03_topic_note_drafts.sql for why that distinction matters.
+ * 20260803170000_topic_note_drafts.sql for why that distinction matters.
  * Deliberately quiet: called on an interval from NoteEditor while the
  * doc is dirty, not meant to throw a user-facing toast on every network
  * hiccup the way an explicit Save Draft click should.

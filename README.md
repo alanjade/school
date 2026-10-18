@@ -188,17 +188,19 @@ middleware.ts        — Next.js middleware: session refresh, role/auth gating, 
 - Most page data is server rendered, while interactive pages stay in client components.
 - The database typing file is maintained manually and should be kept aligned with the SQL schema.
 - Work is tracked in the project todo list and should be reconciled with the actual codebase before being marked complete.
-- **New migration files must use a 14-digit timestamp prefix**:
+- **Migration files use a 14-digit timestamp prefix**:
   `YYYYMMDDHHMMSS_short_description.sql` (e.g.
   `20260920143000_add_hostel_curfew_flag.sql`). The Supabase CLI derives a
   migration's tracked "version" from the digits before the first
-  underscore in its filename — most existing migrations use an
-  underscore-separated date instead (`2026_09_20_...`), which the CLI
-  reads as just `2026` for all of them, so many can't be told apart or
-  ordered by tooling that relies on that version. Existing files are left
-  as-is; only new ones need the full timestamp format. Generate one with
-  `date -u +%Y%m%d%H%M%S`, or let `supabase migration new <name>` generate
-  the filename for you.
+  underscore in its filename, so every file needs a unique, sortable one.
+  Generate one with `date -u +%Y%m%d%H%M%S`, or let
+  `supabase migration new <n>` generate the filename for you. Files that
+  were originally named with an underscore-separated date
+  (`2026_09_20_...`) were renamed to timestamps derived from that date so
+  the whole directory replays in the right order; a project that already
+  had them applied should mark the new versions as applied with
+  `supabase migration repair --status applied <version>` rather than
+  re-running them.
 
 ## License
 

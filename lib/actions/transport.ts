@@ -228,7 +228,7 @@ export async function moveStop(stopId: string, direction: "up" | "down") {
     // moveStop() calls on the same route can't interleave and corrupt the
     // ordering. The old three-sequential-UPDATE approach had a race window
     // between reads and writes that this closes.
-    // Migration: 2026_08_06c_swap_transport_stops_rpc.sql
+    // Migration: 20260806170200_swap_transport_stops_rpc.sql
     const { error } = await admin.rpc("swap_transport_stop_order", {
       p_stop_a: stopId,
       p_stop_b: neighbor.id,
