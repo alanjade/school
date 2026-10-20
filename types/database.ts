@@ -1930,41 +1930,6 @@ export type Database = {
           subject_count: number;
         }[];
       };
-      license_status: {
-        Args: Record<string, never>;
-        Returns: string;
-      };
-      license_active: {
-        Args: Record<string, never>;
-        Returns: boolean;
-      };
-      license_has: {
-        Args: { p_feature: string };
-        Returns: boolean;
-      };
-      license_info: {
-        Args: Record<string, never>;
-        Returns: {
-          status: string;
-          is_trial: boolean | null;
-          valid_until: string | null;
-          grace_until: string | null;
-          features: string[] | null;
-        }[];
-      };
-      license_summary: {
-        Args: Record<string, never>;
-        Returns: {
-          status: string;
-          session: string | null;
-          is_trial: boolean | null;
-          valid_until: string | null;
-          grace_until: string | null;
-          student_cap: number | null;
-          features: string[] | null;
-          student_count: number;
-        }[];
-      };
       get_notification_counts: {
         Args: Record<string, never>;
         Returns: {

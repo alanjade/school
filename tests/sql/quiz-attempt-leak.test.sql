@@ -28,11 +28,6 @@ grant select, insert, update, delete on all tables in schema public to authentic
 \set o_mcq_a   '00000000-0000-0000-0000-0000000000b1'
 \set o_mcq_b   '00000000-0000-0000-0000-0000000000b2'
 
--- Same scratch DB as license-features.test.sql: make sure the licence lets the
--- grading round-trip at the end run (answer/submit are licence-guarded).
-select set_license('11111111-1111-1111-1111-111111111111', 1, '2026/2027',
-  now() + interval '30 days', now() + interval '51 days', 300, array[]::text[]);
-
 insert into auth.users (id, email) values (:'student', 'leak-student@test.local');
 insert into profiles (id, role, full_name) values (:'student', 'student', 'Leak Student')
   on conflict (id) do update set role = 'student', is_active = true;
