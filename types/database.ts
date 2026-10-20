@@ -733,6 +733,13 @@ export type QuizAnswer = {
   answered_at: string;
 };
 
+// One row of get_quiz_attempt_questions. For matching questions the RPC
+// returns two kinds of rows: left rows (option_id + match_prompt, option_text
+// null) and pool rows (option_id null, option_text only). No row ever has
+// both a match_prompt and its correct option_text. fill_blank and essay
+// questions come back as a single row with every option column null.
+// (get_quiz_attempt_review extends this type and is only available once the
+// attempt is submitted, so it does carry the answers.)
 export type QuizAttemptQuestionRow = {
   question_id: string;
   question_text: string;
@@ -1921,6 +1928,41 @@ export type Database = {
           teacher_count: number;
           class_count: number;
           subject_count: number;
+        }[];
+      };
+      license_status: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
+      license_active: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      license_has: {
+        Args: { p_feature: string };
+        Returns: boolean;
+      };
+      license_info: {
+        Args: Record<string, never>;
+        Returns: {
+          status: string;
+          is_trial: boolean | null;
+          valid_until: string | null;
+          grace_until: string | null;
+          features: string[] | null;
+        }[];
+      };
+      license_summary: {
+        Args: Record<string, never>;
+        Returns: {
+          status: string;
+          session: string | null;
+          is_trial: boolean | null;
+          valid_until: string | null;
+          grace_until: string | null;
+          student_cap: number | null;
+          features: string[] | null;
+          student_count: number;
         }[];
       };
       get_notification_counts: {

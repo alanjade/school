@@ -11,16 +11,8 @@ import {
 import { getQuizPreviewQuestions } from "@/lib/actions/quiz";
 import { emitToast } from "@/lib/toast";
 import { QuestionText } from "@/components/QuestionText";
-import type { QuizAttemptQuestionRow } from "@/types/database";
 import { unwrapAction } from "@/lib/actionResult";
-
-type Question = {
-  id: string;
-  text: string;
-  points: number;
-  type: QuizAttemptQuestionRow["question_type"];
-  options: { id: string; text: string; matchPrompt: string | null }[];
-};
+import { groupQuestions, type QuizRunnerQuestion as Question } from "@/lib/quizAttemptRows";
 
 // Local scoring key used only in preview mode, built once at load from
 // quiz_options.is_correct (which the real student-facing RPCs never
@@ -34,40 +26,6 @@ type AnswerKeyEntry =
   | { type: "fill_blank"; accepted: string[] }
   | { type: "matching"; correctPairs: Record<string, string> }
   | { type: "essay" };
-
-function groupQuestions(rows: QuizAttemptQuestionRow[]): {
-  questions: Question[];
-  selected: Record<string, string>;
-  text: Record<string, string>;
-  matched: Record<string, Record<string, string>>;
-} {
-  const byId = new Map<string, Question>();
-  const selected: Record<string, string> = {};
-  const text: Record<string, string> = {};
-  const matched: Record<string, Record<string, string>> = {};
-
-  for (const r of rows) {
-    if (!byId.has(r.question_id)) {
-      byId.set(r.question_id, {
-        id: r.question_id,
-        text: r.question_text,
-        points: r.points,
-        type: r.question_type,
-        options: [],
-      });
-    }
-    if (r.option_id) {
-      byId
-        .get(r.question_id)!
-        .options.push({ id: r.option_id, text: r.option_text ?? "", matchPrompt: r.match_prompt });
-    }
-    if (r.selected_option_id) selected[r.question_id] = r.selected_option_id;
-    if (r.answer_text) text[r.question_id] = r.answer_text;
-    if (r.matched_pairs) matched[r.question_id] = r.matched_pairs;
-  }
-
-  return { questions: [...byId.values()], selected, text, matched };
-}
 
 function formatClock(seconds: number) {
   const m = Math.floor(seconds / 60);
@@ -178,6 +136,10 @@ export function QuizAttemptRunner({
                 text: o.option_text ?? "",
                 matchPrompt: o.match_prompt,
               })),
+              // Same shape as a student's attempt: the dropdown is built
+              // from the right-hand terms alone. Preview reads the staff-
+              // only tables directly, so it still has the full options.
+              pool: row.question_type === "matching" ? opts.map((o) => o.option_text ?? "") : [],
             });
             if (row.question_type === "mcq" || row.question_type === "true_false") {
               key[row.id] = {
@@ -529,11 +491,11 @@ export function QuizAttemptRunner({
                       <option value="" disabled>
                         Choose a match…
                       </option>
-                      {[...q.options]
-                        .sort((a, b) => a.text.localeCompare(b.text))
-                        .map((opt) => (
-                          <option key={opt.id} value={opt.text}>
-                            {opt.text}
+                      {[...q.pool]
+                        .sort((a, b) => a.localeCompare(b))
+                        .map((text, i) => (
+                          <option key={`${i}-${text}`} value={text}>
+                            {text}
                           </option>
                         ))}
                     </select>

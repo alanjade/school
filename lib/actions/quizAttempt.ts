@@ -20,6 +20,14 @@ export async function startQuizAttempt(quizId: string): Promise<ActionResult<Qui
   });
 }
 
+// Questions for an in-progress attempt, as the RPC returns them: it never
+// includes is_correct, fill-in-the-blank accepted answers, or the
+// prompt -> answer pairing of a matching question (see
+// 20261020120000_quiz_attempt_questions_no_answer_leak.sql). A matching
+// question comes back as left rows (option_id + match_prompt) plus pool
+// rows (no option_id, only option_text); lib/quizAttemptRows.ts turns those
+// into the left terms and the dropdown pool. Pass rows through untouched --
+// the response is visible in the browser, so nothing is added back here.
 export async function getQuizAttemptQuestions(
   attemptId: string
 ): Promise<ActionResult<QuizAttemptQuestionRow[]>> {
